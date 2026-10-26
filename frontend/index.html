@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Calidad del Aire (IoT)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <header class="flex justify-between items-center border-b border-slate-800 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-sky-400">Monitor de Higiene Ambiental y Riesgos</h1>
+        <p class="text-xs text-slate-400">ESP32 + Mosquitto + FastAPI + Random Forest</p>
+      </div>
+      <div id="conn-status" class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-400">Conectando...</div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-xl">
+        <span class="text-xs uppercase text-slate-400">Gas MQ-135</span>
+        <div id="val-gas" class="text-3xl font-extrabold text-white mt-1">--</div>
+      </div>
+      <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-xl">
+        <span class="text-xs uppercase text-slate-400">Temperatura / Humedad</span>
+        <div id="val-temp" class="text-3xl font-extrabold text-sky-400 mt-1">-- °C</div>
+        <div id="val-hum" class="text-sm font-semibold text-slate-400">-- % RH</div>
+      </div>
+      <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-xl">
+        <span class="text-xs uppercase text-slate-400">Estado Random Forest</span>
+        <div id="val-riesgo" class="text-xl font-extrabold text-emerald-400 mt-2">--</div>
+      </div>
+      <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-xl">
+        <span class="text-xs uppercase text-slate-400">Latencia Red</span>
+        <div id="val-lat" class="text-3xl font-extrabold text-amber-400 mt-1">-- ms</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-slate-800/60 p-5 rounded-xl border border-slate-700/60 h-64">
+        <canvas id="chartAire"></canvas>
+      </div>
+      <div class="bg-slate-800/60 p-5 rounded-xl border border-slate-700/60 flex flex-col justify-center">
+        <h2 class="text-sm font-semibold text-slate-300 mb-4">Control Manual de Ventilación (Override)</h2>
+        <button onclick="enviarComando('VENT_ON')" class="w-full py-4 mb-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg transition">Forzar Extracción (ON)</button>
+        <button onclick="enviarComando('VENT_OFF')" class="w-full py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg transition">Apagar (OFF)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('chartAire').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [
+        { label: 'Gas', data: [], borderColor: '#38bdf8', tension: 0.3 },
+        { label: 'Temperatura', data: [], borderColor: '#fbbf24', tension: 0.3 }
+      ]},
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const ws = new WebSocket("ws://localhost:8000/ws/telemetria");
+    ws.onopen = () => document.getElementById("conn-status").className = "px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-400";
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      document.getElementById('val-gas').innerText = parseInt(data.gas_filtered);
+      document.getElementById('val-temp').innerText = data.temperature + " °C";
+      document.getElementById('val-hum').innerText = data.humidity + " % RH";
+      document.getElementById('val-lat').innerText = data.latencia_ms + " ms";
+      
+      const riesgo = document.getElementById('val-riesgo');
+      riesgo.innerText = data.ml_risk_state;
+      if(data.ml_risk_state.includes("Seguro")) riesgo.className = "text-xl font-extrabold text-emerald-400 mt-2";
+      else if(data.ml_risk_state.includes("Ventilación")) riesgo.className = "text-xl font-extrabold text-amber-400 mt-2";
+      else riesgo.className = "text-xl font-extrabold text-rose-500 mt-2";
+
+      chart.data.labels.push(new Date().toLocaleTimeString().split(" ")[0]);
+      chart.data.datasets[0].data.push(data.gas_filtered);
+      chart.data.datasets[1].data.push(data.temperature);
+      if (chart.data.labels.length > 20) {
+        chart.data.labels.shift();
+        chart.data.datasets.forEach(d => d.data.shift());
+      }
+      chart.update('none');
+    };
+
+    function enviarComando(cmd) { ws.send(JSON.stringify({ action: cmd })); }
+  </script>
+</body>
+</html>
