@@ -32,7 +32,7 @@ long windowSum = 0;
 unsigned long previousMillis = 0;
 const long interval = 2000;
 
-const int UMBRAL_GAS_CRITICO = 2500;
+const int UMBRAL_GAS_CRITICO = 1000;
 const float UMBRAL_TEMP_CRITICA = 30.0;
 
 float applyMovingAverageFilter(int rawValue) {

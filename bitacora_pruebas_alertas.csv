@@ -1,0 +1,11 @@
+﻿prueba,sequence_id,gas_adc,temperatura_c,humedad_pct,diagnostico_ia,latencia_ms,timestamp,delta_alerta_s
+1,62,1083.5,26,59.6,Riesgo Respiratorio,1.94,54:47.6,
+2,77,1216.7,26,59.3,Riesgo Respiratorio,0.14,55:17.6,30.004
+3,104,1095.7,25.9,59.6,Riesgo Respiratorio,2.27,56:11.6,54.001
+4,119,1021,25.9,59.9,Riesgo Respiratorio,4.84,56:41.7,30.007
+5,163,1070.3,26.1,59.6,Riesgo Respiratorio,8.44,58:09.7,88.001
+6,192,1002.7,26,59.4,Riesgo Respiratorio,9.51,59:07.7,57.998
+7,219,1023.3,25.9,59.5,Riesgo Respiratorio,11.86,00:01.7,54.005
+8,244,1141.5,25.9,59.7,Riesgo Respiratorio,13.34,00:51.7,50
+9,272,1130,25.9,59.7,Riesgo Respiratorio,15.27,01:47.7,56.001
+10,307,1113.1,25.9,60.1,Riesgo Respiratorio,18.25,02:57.7,70.009
